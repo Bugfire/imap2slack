@@ -1,0 +1,22 @@
+{
+  "name": "imap2slack",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bugfire/imap2slack.git"
+  },
+  "main": "imap2slack.js",
+  "engines": {
+    "node": ">= 4"
+  },
+  "scripts": {
+    "test": "nodeunit imap2slack.js"
+  },
+  "dependencies": {
+    "forever": "^0.15.1",
+    "iconv": "^2.1.11",
+    "inbox": "^1.1.59",
+    "mailparser": "^0.5.2",
+    "request": "^2.72.0"
+  }
+}

@@ -1,0 +1,65 @@
+//
+
+var get_lines = function(text, l0, l1) {
+  var lines = text.split('\n');
+  if (l0 > lines.length)
+    return '';
+  if (l1 > lines.length)
+    l1 = lines.length;
+  if (l0 > l1)
+    return '';
+  return lines.slice(l0, l1).join('\n') + '\n';
+};
+
+var search_line = function(text, str) {
+  var lines = text.split('\n');
+  for (var i in lines) {
+    var j = lines[i];
+    if (j.indexOf(str) == 0)
+      return i;
+  }
+  return -1;
+} 
+
+function mail_filter(from, title, txt, callback) {
+  if ((from == test_addr ||
+       from == 'mail@kuronekoyamato.co.jp') &&
+       title == '宅急便お届けのお知らせ') {
+    var msg;
+    if (/ご不在でしたので持ち帰りました。/.test(txt)) {
+      msg = get_lines(txt, 5, 6)
+          + get_lines(txt, 7, 9)
+          + get_lines(txt, 10, 12)
+          + get_lines(txt, 13, 14)
+          + get_lines(txt, 15, 17)
+          + get_lines(txt, 18, 19);
+    } else {
+      msg = get_lines(txt, 6, 9)
+          + get_lines(txt, 12, 16);
+    }
+    callback('クロネコヤマト' + title, msg);
+
+  } else if ((from == test_addr ||
+              from == 'info@ds.sagawa-exp.co.jp') &&
+             title == '佐川配達予定案内') {
+    var msg;
+    msg = get_lines(txt, 7, 11)
+        + get_lines(txt, 14, 16)
+        + get_lines(txt, 38, 40);
+    callback(title, msg);
+
+  } else {
+    callback();
+  }
+};
+
+module.exports = {
+  mail : {
+    auth : {
+      user : "xxx@gmail.com",
+      pass : "xxx"
+    }
+  },
+  mail_filter : mail_filter,
+  slack_api : 'XXX',
+};
