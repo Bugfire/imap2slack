@@ -60,6 +60,17 @@ module.exports = {
       pass : "xxx"
     }
   },
+  gdrive : {
+    auth : {
+      client_id : 'xxx',
+      client_secret : 'xxx',
+      refresh_token : 'xxx',
+    },
+    dir : 'xxx',
+  },
   mail_filter : mail_filter,
-  slack_api : 'XXX',
+  slack : {
+      api : 'XXX',
+      token : 'XXX',
+  },
 };
