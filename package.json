@@ -1,24 +1,30 @@
 {
   "name": "imap2slack",
   "version": "0.0.1",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Bugfire/imap2slack.git"
-  },
+  "description": ". Requires docker",
   "main": "imap2slack.js",
-  "engines": {
-    "node": ">= 4"
-  },
-  "scripts": {
-    "test": "nodeunit imap2slack.js"
-  },
   "dependencies": {
-    "forever": "^0.15.1",
+    "bluebird": "^3.4.1",
+    "forever": "^0.15.2",
     "googleapis": "^9.0.0",
-    "iconv": "^2.1.11",
+    "iconv": "^2.2.1",
     "inbox": "^1.1.59",
-    "mailparser": "^0.5.2",
+    "mailparser": "^0.6.0",
     "readline": "^1.3.0",
     "request": "^2.72.0"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bugfire/imap2slack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bugfire/imap2slack/issues"
+  },
+  "homepage": "https://github.com/Bugfire/imap2slack#readme"
 }

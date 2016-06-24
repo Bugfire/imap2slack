@@ -9,18 +9,15 @@ const config = require('/data/config.js');
 const REDIRECT_URL = 'urn:ietf:wg:oauth:2.0:oob';
 const SCOPE = ['https://www.googleapis.com/auth/drive'];
 
-const rl =
-    readline.createInterface({input: process.stdin, output: process.stdout});
+const rl = readline.createInterface({input: process.stdin, output: process.stdout});
 
 let r = {};
 
 const getCode = () => {
     return new Promise((resolve, reject) => {
         r.oauth2Client = new google.auth.OAuth2(
-            config.gdrive.auth.client_id, config.gdrive.auth.client_secret,
-            REDIRECT_URL);
-        const url = r.oauth2Client.generateAuthUrl(
-            {access_type: 'offline', scope: SCOPE});
+            config.gdrive.auth.client_id, config.gdrive.auth.client_secret, REDIRECT_URL);
+        const url = r.oauth2Client.generateAuthUrl({access_type: 'offline', scope: SCOPE});
 
         console.log('Open this url in web-browser : ', url);
         rl.question('Input displayed code >>> ', code => {

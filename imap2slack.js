@@ -9,6 +9,9 @@ const log =
 
 // -- MAIL
 
+const Promise = require('bluebird');
+Promise.longStackTraces();
+
 const Inbox = require('inbox');
 const MailParser = require('mailparser').MailParser;
 const fs = require('fs');
@@ -24,8 +27,7 @@ let m = {
 
 const imap_connect = () => {
     const imap = Inbox.createConnection(
-        false, 'imap.gmail.com',
-        {secureConnection: true, auth: config.mail.auth});
+        false, 'imap.gmail.com', {secureConnection: true, auth: config.mail.auth});
 
     imap.on('connect', () => {
         log('imap: connected');
@@ -87,16 +89,14 @@ const imap_connect = () => {
 
     const fetch_mail =
         (uid, callback) => {
+            log('imap: fetching... [' + uid + ']');
             const stream = imap.createMessageStream(uid);
             const mailParser = new MailParser();
             mailParser.on('end', mail => {
                 mail.uid = uid;
-                if (typeof mail.attachments !== 'undefined' &&
-                    mail.attachments.length > 0) {
+                if (typeof mail.attachments !== 'undefined' && mail.attachments.length > 0) {
                     const a = mail.attachments[0];
-                    check_mail(
-                        mail, (new Date().toISOString()) + a.fileName,
-                        a.content, callback);
+                    check_mail(mail, (new Date().toISOString()) + '-' + a.fileName, a.content, callback);
                 } else {
                     check_mail(mail, null, null, callback);
                 }
@@ -115,27 +115,25 @@ const imap_connect = () => {
         if (false && config.debug)
             log('body: ' + mail.text);
 
-        config.mail_filter(
-            mail.from[0].address, mail.subject, mail.text, (subject, body) => {
-                if (typeof subject !== 'undefined' &&
-                    typeof body !== 'undefined') {
-                    if (filename && content) {
-                        send_slack_image(subject, body, filename, content);
-                    } else {
-                        send_slack(subject, body, filename, content);
-                    }
-                    imap.addFlags(mail.uid, ['\\Seen'], (err, flags) => {
-                        callback(err);
-                    });
+        config.mail_filter(mail.from[0].address, mail.subject, mail.text, (subject, body) => {
+            if (typeof subject !== 'undefined' && typeof body !== 'undefined') {
+                let p;
+                if (filename && content) {
+                    p = send_slack_image(subject, body, filename, content);
                 } else {
-                    log('imap: IGNORED: ' +
-                        mail.uid);  // + JSON.stringify(mail));
-                    callback(null);
+                    p = send_slack(subject, body);
                 }
-            });
+                p.then(() => {
+                   imap.addFlags(mail.uid, ['\\Seen'], (err, flags) => { callback(err); });
+                }).catch((err) => { err = err || (new Error('unknown error')); callback(err); });
+            } else {
+                log('imap: IGNORED: ' + mail.uid);  // + JSON.stringify(mail));
+                callback(null);
+            }
+        });
     };
 
-    imap.on('new', (message) => {
+    imap.on('new', message => {
         log('imap: new:');
         fetch_mail(message.UID, error => {});
     });
@@ -144,6 +142,9 @@ const imap_connect = () => {
 
     log('imap: connect');
     imap.connect();
+
+    //XXX
+    setTimeout(() => { fetch_mail(622, () => {}); }, 10*1000);
 };
 
 // -- Google drive
@@ -166,8 +167,7 @@ const getMimeTypeFromFilename = filename => {
 const getOauth2Client = () => {
     if (_oauth2Client == null) {
         _oauth2Client = new google.auth.OAuth2(
-            config.gdrive.auth.client_id, config.gdrive.auth.client_secret,
-            REDIRECT_URL);
+            config.gdrive.auth.client_id, config.gdrive.auth.client_secret, REDIRECT_URL);
         _oauth2Client.setCredentials({
             refresh_token: config.gdrive.auth.refresh_token,
         });
@@ -184,10 +184,8 @@ const get_gdrive_dir = dirname => {
               q: "title='" + dirname + "'",
             },
             (err, res) => {
-                if (err || Array.isArray(res.items) == false ||
-                    res.items.length != 1) {
-                    console.log(
-                        'error ' + JSON.stringify({res: res, err: err}));
+                if (err || Array.isArray(res.items) == false || res.items.length != 1) {
+                    console.log('error ' + JSON.stringify({res: res, err: err}));
                     return reject(err);
                 }
                 return resolve(res.items[0].id);
@@ -217,8 +215,7 @@ const upload_gdrive = (folderID, filename, content) => {
                 if (err) {
                     return reject(err);
                 }
-                return resolve(
-                    'https://docs.google.com/a/cid.jp/uc?id=' + res.id);
+                return resolve('https://docs.google.com/a/cid.jp/uc?id=' + res.id);
             });
     });
 };
@@ -236,7 +233,7 @@ const send_gdrive = (filename, content) => {
 
 const slack_api_uri = 'https://slack.com/api/';
 
-const send_slack_image = (title, mesasge, filename, content) => {
+const send_slack_image = (title, message, filename, content) => {
     return new Promise((resolve, reject) => {
         if (config.debug === true) {
             log('DEBUG: send_slack_image()');
@@ -249,35 +246,35 @@ const send_slack_image = (title, mesasge, filename, content) => {
         let options = {
             token: config.slack.token,
             title: title,
-            text: message,
+            content: message,
             filename: filename,
-            file: content,
+            file: JSON.stringify(content),
             channels: config.slack.channel,
         };
+
+        console.log(options);
 
         let retry = 1;
         const send_internal = () => {
             log('sending image... ' + retry);
-            request.post(
+            let req = request.post(
                 {url: slack_api_uri + 'files.upload', formData: options},
                 (error, response, body) => {
                     if (!error && response.statusCode == 200) {
                         log('done');
+                        log(JSON.stringify(response));
                         return resolve();
                     } else {
                         retry++;
                         if (retry > 10) {
-                            log('max retry error on send_slack_image() ' +
-                                title + ' / ' + message + '/' + filename);
-                            return reject(
-                                new Error('send_slack_iamge() error'));
+                            log('max retry error on send_slack_image() ' + title + ' / ' + message +
+                                '/' + filename);
+                            return reject(new Error('send_slack_image() error'));
                         } else {
-                            log('send error ' + response.statusCode + ' / ' +
-                                body);
+                            log('send error ' + response.statusCode + ' / ' + body);
                             setTimeout(
                                 () => { send_internal(); },
-                                retry * retry * retry *
-                                    1000);  // 1sec to 1000sec
+                                retry * retry * retry * 1000);  // 1sec to 1000sec
                         }
                     }
                 });
@@ -286,13 +283,12 @@ const send_slack_image = (title, mesasge, filename, content) => {
     });
 };
 
-const send_slack = (title, message, filename, content) => {
+const send_slack = (title, message) => {
     return new Promise((resolve, reject) => {
         if (config.debug === true) {
             log('DEBUG: send_slack()');
             log('title:' + title);
             log('message:' + message);
-            log('image:' + filename);
             // return;
         }
 
@@ -311,19 +307,6 @@ const send_slack = (title, message, filename, content) => {
             json: body,
         };
 
-        let p;
-        let uri = null;
-        if (filename) {
-            /*
-            p = send_gdrive(filename, content).then(r => {
-                options.json.attachments[0].text += ' <' + r + '>';
-            })
-            */
-            p = Promise.resolve();
-        } else {
-            p = Promise.resolve();
-        }
-
         let retry = 1;
         const send_internal = () => {
             log('sending text ... ' + retry);
@@ -334,8 +317,8 @@ const send_slack = (title, message, filename, content) => {
                 } else {
                     retry++;
                     if (retry > 10) {
-                        log('max retry error on send_slack() ' + title + ' / ' +
-                            message + '/' + filename);
+                        log('max retry error on send_slack() ' + title + ' / ' + message + '/' +
+                            filename);
                         return reject(new Error('send_slack() error'));
                     } else {
                         log('send error ' + response.statusCode + ' / ' + body);
@@ -347,7 +330,7 @@ const send_slack = (title, message, filename, content) => {
             });
         };
 
-        p.then(() => send_internal());
+        send_internal();
     });
 };
 
