@@ -96,7 +96,8 @@ const imap_connect = () => {
                 mail.uid = uid;
                 if (typeof mail.attachments !== 'undefined' && mail.attachments.length > 0) {
                     const a = mail.attachments[0];
-                    check_mail(mail, (new Date().toISOString()) + '-' + a.fileName, a.content, callback);
+                    check_mail(
+                        mail, (new Date().toISOString()) + '-' + a.fileName, a.content, callback);
                 } else {
                     check_mail(mail, null, null, callback);
                 }
@@ -124,8 +125,11 @@ const imap_connect = () => {
                     p = send_slack(subject, body);
                 }
                 p.then(() => {
-                   imap.addFlags(mail.uid, ['\\Seen'], (err, flags) => { callback(err); });
-                }).catch((err) => { err = err || (new Error('unknown error')); callback(err); });
+                     imap.addFlags(mail.uid, ['\\Seen'], (err, flags) => { callback(err); });
+                 }).catch((err) => {
+                    err = err || (new Error('unknown error'));
+                    callback(err);
+                });
             } else {
                 log('imap: IGNORED: ' + mail.uid);  // + JSON.stringify(mail));
                 callback(null);
@@ -142,9 +146,6 @@ const imap_connect = () => {
 
     log('imap: connect');
     imap.connect();
-
-    //XXX
-    setTimeout(() => { fetch_mail(622, () => {}); }, 10*1000);
 };
 
 // -- Google drive
@@ -156,7 +157,7 @@ let _oauth2Client = null;
 const getMimeTypeFromFilename = filename => {
     if (filename.substr(-4).toLowerCase() == '.jpg' ||
         filename.substr(-5).toLowerCase() == '.jpeg') {
-        return 'image/jpeg';
+        return 'image/jpg';
     }
     if (filename.substr(-4).toLowerCase() == '.png') {
         return 'image/png';
@@ -245,14 +246,16 @@ const send_slack_image = (title, message, filename, content) => {
 
         let options = {
             token: config.slack.token,
-            title: title,
-            content: message,
-            filename: filename,
-            file: JSON.stringify(content),
+            title: title + ' ' + message,
             channels: config.slack.channel,
+            file: {
+                value: content,
+                options: {
+                    filename: filename,
+                    contentType: getMimeTypeFromFilename(filename),
+                },
+            },
         };
-
-        console.log(options);
 
         let retry = 1;
         const send_internal = () => {
