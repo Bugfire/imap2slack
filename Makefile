@@ -1,39 +1,31 @@
 #
 
-.PHONY: all build run setup bash stop logs clean format help
+.PHONY: $(shell egrep -o ^[a-zA-Z_-]+: $(MAKEFILE_LIST) | sed 's/://')
 
-PKG_NAME=imap2slack
+default: help
 
-all: help
+build: ## Build docker
+	docker-compose build
 
-build: ## Build Container
-		docker build -t ${PKG_NAME} .
+push: ## Push docker
+	docker-compose push
 
-run: ## Run Container
-		docker rm ${PKG_NAME} || true
-		docker run -it --name ${PKG_NAME} --volume=`pwd`/data:/data ${PKG_NAME}
+run: ## Run docker
+	docker-compose down || true
+	docker-compose up
 
-setup: ## Get refresh token script
-		docker run --rm -it --volume=`pwd`/data:/data ${PKG_NAME} ./google_get_access_token.js
+stop: ## Stop docker
+	docker-compose down
 
-bash: ## Run bash in Container
-		docker run --rm -it --volume=`pwd`/data:/data ${PKG_NAME} /bin/bash
+logs: ## Show docker logs
+	docker-compose logs
 
-stop: ## Stop Container
-		docker kill ${PKG_NAME} || true
-		docker rm ${PKG_NAME} || true
+lint: ## Run eslint
+	npm run lint
 
-logs: ## Show Container Logs
-		docker logs ${PKG_NAME}
-
-clean: ## Clean Containers
-		docker ps -a | grep -v "CONTAINER" | awk '{print $$1}' | xargs docker rm
-		docker images -a | grep "^<none>" | awk '{print $$3}' | xargs docker rmi
-
-format: ## Format sources by clang-format
-		@for i in *.js; do \
-			clang-format-3.8 -i -lines=2:99999 $$i; \
-		done;
+clean: ## Clean docker container, images
+	docker ps -a | grep -v "CONTAINER" | awk '{print $$1}' | xargs docker rm
+	docker images -a | grep "^<none>" | awk '{print $$3}' | xargs docker rmi
 
 help: ## This help
-		@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -Eh '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

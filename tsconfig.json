@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "sourceMap": true,
+    "removeComments": true,
+    "strict": true,
+    "outDir": "dist",
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "src/@types"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

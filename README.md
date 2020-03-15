@@ -1,3 +1,3 @@
 . Requires docker
 
-see data/config.js.sample
+see config/config.json.sample
