@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  app:
+    image: bugfire/imap2slack:0.1.0
+    volumes:
+      - "./config:/config:ro"
+      - "./data:/data"
+    restart: always
+    cpu_shares: 20
+    mem_limit: "2048m"
+    build:
+      context: .

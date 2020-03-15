@@ -1,0 +1,38 @@
+{
+  "mail": {
+    "host": "imap.gmail.com",
+    "auth": {
+      "user": "XXX@gmail.com",
+      "pass": "XXX"
+    }
+  },
+  "slack": {
+    "webhook": "https://hooks.slack.com/services/XXX",
+    "token": "xoxb-XXX",
+    "channel_id": "XXX",
+    "channel_name": "#XXX"
+  },
+  "filter": [
+    {
+      "cond": "allow",
+      "subject": "^TITLE$",
+      "bodyFilter": {
+        "regex": "BODY REGEX",
+        "replace": ""
+      }
+    },
+    {
+      "cond": "allow",
+      "from": "^FROM$",
+      "bodyFilter": {
+        "regex": "^BODY (.*) REGEX$",
+        "replace": "$1"
+      }
+    },
+    {
+      "cond": "allow"
+    }
+  ],
+  "debug": false,
+  "dryrun": false
+}
