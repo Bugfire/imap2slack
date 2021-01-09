@@ -127,7 +127,7 @@ class Slack {
       return;
     }
 
-    for (let retry = 1; retry <= 10; retry++) {
+    for (let retry = 1; retry <= 5; retry++) {
       infoLog(`Slack.postMessage: Sending text... count:${retry}`);
       try {
         const r = await axios.post(config.slack.webhook, body, option);
@@ -164,7 +164,7 @@ class Slack {
       return;
     }
 
-    for (let retry = 1; retry <= 10; retry++) {
+    for (let retry = 1; retry <= 5; retry++) {
       infoLog(`Slack.postImage: Sending image... count:${retry}`);
       try {
         const r = await axios.post(`${this.SLACK_API_URI}files.upload`, form, {
@@ -286,14 +286,14 @@ class ImapChecker {
     const mail = await this.readMail(uid);
 
     infoLog(
-      `  from: "${mail.from.value[0].name}" <"${mail.from.value[0].address}">`
+      `  from: "${mail.from?.value[0].name}" <"${mail.from?.value[0].address}">`
     );
     infoLog(`  subject: ${mail.subject}`);
 
     const r = this.mailFilter({
-      from: mail.from.value[0].address,
-      subject: mail.subject,
-      body: mail.text
+      from: mail.from?.value[0].address ?? "",
+      subject: mail.subject ?? "",
+      body: mail.text ?? ""
     });
     if (r !== null) {
       await Slack.postMessage(r.subject, r.body);
@@ -367,7 +367,7 @@ class ImapChecker {
         await sleep(1000);
       }
     } catch (e) {
-      infoLog(`ImapChecker.onConnect: checkMail error: ${e}`);
+      infoLog(`ImapChecker.onConnect: checkMail error: ${e} ${e.stack}`);
       if (this.imap !== null) {
         this.imap.close();
         this.imap = null;

@@ -1,6 +1,6 @@
 ###
 
-FROM node:10-alpine AS build
+FROM node:12-alpine AS build
 
 COPY package*.json tsconfig.json /usr/src/app/
 COPY src /usr/src/app/src/
