@@ -5,7 +5,6 @@
  */
 
 declare module "inbox" {
-  import * as Inbox from "inbox";
   import * as Stream from "stream";
 
   type createConnectionOptions = {
@@ -38,13 +37,8 @@ declare module "inbox" {
   }
   */
 
-  // eslint-disable-next-line @typescript-eslint/interface-name-prefix
   export class IMAPClient {
-    constructor(
-      port: portArgument,
-      host: hostArgument,
-      options: createConnectionOptions
-    );
+    constructor(port: portArgument, host: hostArgument, options: createConnectionOptions);
 
     connect(): void;
 
@@ -57,11 +51,7 @@ declare module "inbox" {
     ): void;
     */
 
-    openMailbox(
-      path: string | { path: string },
-      options: openMailboxOptions,
-      callback: (error: Error) => void
-    ): void;
+    openMailbox(path: string | { path: string }, options: openMailboxOptions, callback: (error: Error) => void): void;
 
     /*
     getCurrentMailbox(): Mailbox;
@@ -85,16 +75,8 @@ declare module "inbox" {
 
     close(): void;
     createMessageStream(uid: string): Stream;
-    addFlags(
-      uid: string,
-      flags: string[],
-      callback: (error: Error) => void
-    ): void;
-    search(
-      query: { unseen: boolean },
-      isUid: boolean,
-      callback: (error: Error, result: string[]) => void
-    ): void;
+    addFlags(uid: string, flags: string[], callback: (error: Error) => void): void;
+    search(query: { unseen: boolean }, isUid: boolean, callback: (error: Error, result: string[]) => void): void;
   }
 
   export function createConnection(

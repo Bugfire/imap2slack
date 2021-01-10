@@ -1,0 +1,31 @@
+name: Test
+
+on: 'push'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TARGET_PATH: .
+      CACHE_VERSION: v1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2.1.2
+        with:
+          node-version: 12.x
+          check-latest: true
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.TARGET_PATH }}/node_modules
+          key: ${{ env.CACHE_VERSION }}-${{ runner.os }}-v12-${{ hashFiles(format('{0}/package-lock.json', env.TARGET_PATH)) }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-${{ runner.os }}-v12-
+      - name: Install
+        run: |
+          cd ${{ env.TARGET_PATH }}
+          npm install
+      - name: Test
+        run: |
+          cd ${{ env.TARGET_PATH }}
+          npm run test

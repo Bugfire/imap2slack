@@ -6,12 +6,6 @@
     "removeComments": true,
     "strict": true,
     "outDir": "dist",
-    "types": [
-      "node"
-    ],
-    "typeRoots": [
-      "src/@types"
-    ]
   },
   "include": [
     "src/**/*.ts"

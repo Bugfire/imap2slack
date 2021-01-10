@@ -2,7 +2,7 @@ version: '2'
 
 services:
   app:
-    image: bugfire/imap2slack:0.1.3
+    image: bugfire/imap2slack:0.1.4
     volumes:
       - "./config:/config:ro"
       - "./data:/data"
