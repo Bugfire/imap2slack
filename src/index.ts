@@ -151,7 +151,7 @@ class ImapChecker {
         await this.checkMail(unseenMails[i]);
         await sleep(1000);
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.info(`ImapChecker.onConnect: checkMail error: ${e} ${e.stack}`);
       if (this.imap !== null) {
         this.imap.close();
